@@ -1,6 +1,5 @@
 import discord
 from datetime import datetime
-from helpers import ArtBuilder
 
 
 DEFAULT_COLOR = 0xF4900D

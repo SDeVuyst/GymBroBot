@@ -11,24 +11,16 @@ import logging
 import os
 import platform
 import random
-import psycopg2
-import time
 import discord
-import requests
-from bs4 import BeautifulSoup
 
 from discord.ext import tasks
 from discord.ext.commands import AutoShardedBot
-from discord import Webhook
-import aiohttp
 
 import embeds
-from helpers import WordFinder, db_manager, ArtBuilder
 import exceptions
 
-from datetime import datetime, timedelta
+from datetime import datetime
 
-from cogs.general import DynamicVotesButton
 
 intents = discord.Intents.all()
 
@@ -113,22 +105,6 @@ logger.addHandler(file_handler)
 bot.logger = logger
 
 
-def init_db():
-    time.sleep(30)
-    with psycopg2.connect(
-        host='192.168.86.200', dbname='pg_wcb3', user=os.environ.get('POSTGRES_USER'), password=os.environ.get('POSTGRES_PASSWORD')
-    ) as con:
-        
-        with con.cursor() as cursor:
-
-            with open(
-                f"{os.path.realpath(os.path.dirname(__file__))}/database/schema.sql"
-            ) as file:
-                cursor.execute(file.read())
-
-    bot.logger.info(f"initializing db")
-
-
 @bot.event
 async def on_ready() -> None:
     """
@@ -185,9 +161,6 @@ async def on_app_command_completion(interaction, command) -> None:
         bot.logger.info(
             f"Executed {executed_command} command by {interaction.user} (ID: {interaction.user.id}) in DMs"
         )
-
-    # add stats to db
-    await db_manager.increment_or_add_command_count(interaction.user.id, executed_command, 1)
 
 
 async def on_tree_error(interaction, error):
@@ -323,14 +296,6 @@ async def on_tree_error(interaction, error):
 bot.tree.on_error = on_tree_error
 
 
-async def setup_hook() -> None:
-
-    # For dynamic items, we must register the classes instead of the views.
-    bot.add_dynamic_items(DynamicVotesButton)
-
-bot.setup_hook = setup_hook
-
-
 async def load_cogs() -> None:
     """
     The code in this function is executed whenever the bot will start.
@@ -349,6 +314,7 @@ async def load_cogs() -> None:
                 bot.unloaded.add(extension)
 
 
-init_db()
 asyncio.run(load_cogs())
+
+logger.info(os.environ.get("TOKEN"))
 bot.run(os.environ.get("TOKEN"))
